@@ -1,30 +1,17 @@
 import pandas as pd
 import re
+import string
 import nltk
-
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, classification_report
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 
-# ============================
-# STEP 0: Setup NLTK Resources
-# ============================
+# Download NLTK resources (run once)
 nltk.download('punkt')
-nltk.download('punkt_tab')
 nltk.download('stopwords')
-
-stop_words = set(stopwords.words('english'))
-
-def preprocess_text(text):
-    """Lowercase, remove punctuation/numbers, tokenize, remove stopwords"""
-    text = text.lower()
-    text = re.sub(r'[^a-z\s]', '', text)  # keep only alphabets
-    tokens = word_tokenize(text)
-    tokens = [word for word in tokens if word not in stop_words]
-    return ' '.join(tokens)
 
 # ============================
 # STEP 1: Load Dataset
@@ -36,14 +23,24 @@ print("Sample data:")
 print(df.head())
 
 # ============================
-# STEP 2: Preprocess Messages
+# STEP 2: Preprocessing
 # ============================
-df['message_cleaned'] = df['message'].apply(preprocess_text)
+stop_words = set(stopwords.words('english'))
+
+def preprocess_text(text):
+    text = text.lower()  # lowercase
+    text = re.sub(r'\d+', '', text)  # remove numbers
+    text = text.translate(str.maketrans('', '', string.punctuation))  # remove punctuation
+    tokens = word_tokenize(text)  # tokenize
+    tokens = [w for w in tokens if w not in stop_words]  # remove stopwords
+    return " ".join(tokens)
+
+df['cleaned_message'] = df['message'].apply(preprocess_text)
 
 # ============================
 # STEP 3: Train-Test Split
 # ============================
-X = df['message_cleaned']
+X = df['cleaned_message']
 y = df['label']
 
 X_train, X_test, y_train, y_test = train_test_split(
@@ -80,4 +77,9 @@ while True:
         break
     msg_cleaned = preprocess_text(msg)
     msg_tfidf = vectorizer.transform([msg_cleaned])
-    print("Prediction:", model.predict(msg_tfidf)[0])
+    prediction = model.predict(msg_tfidf)[0]
+    
+    if prediction == "spam":
+        print("Prediction: SPAM (🚨 Junk/Unwanted Message)")
+    else:
+        print("Prediction: HAM (✅ Legitimate Message)")
