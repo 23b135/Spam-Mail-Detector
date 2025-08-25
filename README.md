@@ -1,0 +1,1 @@
+“Developed a House Price Prediction model using the Boston Housing dataset. Implemented Linear Regression and Random Forest to predict prices, performed feature analysis, and evaluated models with MSE and R². Gained skills in data preprocessing, visualization, and regression modeling.”
